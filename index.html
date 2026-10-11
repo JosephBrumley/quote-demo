@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Event quote estimator, demo for Warehouse 6 Events</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    --bg: #E4E7E8;
+    --surface: #F3F4F4;
+    --ticket: #FBFBF9;
+    --ink: #1A2126;
+    --muted: #56636B;
+    --line: #B8C1C6;
+    --steel: #2C5978;
+    --on-steel: #FFFFFF;
+    --brass: #8F6612;
+    --banner: #1A2126;
+    --on-banner: #E4E7E8;
+    --display: 'Big Shoulders Display', 'Arial Narrow', Arial, sans-serif;
+    --body: 'Public Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12171A;
+      --surface: #1B2226;
+      --ticket: #222B30;
+      --ink: #E6EAEC;
+      --muted: #93A1A9;
+      --line: #3A4851;
+      --steel: #7DB3D8;
+      --on-steel: #0F1A21;
+      --brass: #E0B34F;
+      --banner: #E6EAEC;
+      --on-banner: #12171A;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #12171A;
+    --surface: #1B2226;
+    --ticket: #222B30;
+    --ink: #E6EAEC;
+    --muted: #93A1A9;
+    --line: #3A4851;
+    --steel: #7DB3D8;
+    --on-steel: #0F1A21;
+    --brass: #E0B34F;
+    --banner: #E6EAEC;
+    --on-banner: #12171A;
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  :focus-visible { outline: 3px solid var(--steel); outline-offset: 2px; }
+
+  .banner {
+    background: var(--banner);
+    color: var(--on-banner);
+    font-size: 14px;
+    padding: 10px 20px;
+    text-align: center;
+  }
+
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 40px 20px 120px; }
+
+  h1 {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: clamp(44px, 8vw, 84px);
+    line-height: 0.95;
+    letter-spacing: 0.005em;
+    margin: 0 0 14px;
+    max-width: 14ch;
+  }
+  .lede { color: var(--muted); max-width: 52ch; margin: 0 0 40px; font-size: 18px; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 390px;
+    gap: 48px;
+    align-items: start;
+  }
+
+  fieldset { border: 0; padding: 0; margin: 0 0 36px; min-width: 0; }
+  legend {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 28px;
+    padding: 0 0 10px;
+    margin-bottom: 14px;
+    border-bottom: 2px solid var(--ink);
+    width: 100%;
+  }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  label.field { display: block; font-weight: 600; font-size: 15px; }
+  .field span.hint { display: block; font-weight: 400; color: var(--muted); font-size: 14px; margin-top: 4px; }
+  select, input[type="date"], input[type="text"], input[type="email"] {
+    width: 100%;
+    margin-top: 6px;
+    padding: 12px 12px;
+    font: inherit;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1.5px solid var(--line);
+    border-radius: 4px;
+    min-height: 48px;
+  }
+  .daybadge {
+    margin-top: 8px;
+    font-size: 14px;
+    color: var(--muted);
+    min-height: 21px;
+  }
+
+  .guests { display: flex; align-items: baseline; gap: 14px; }
+  .guests output {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 64px;
+    line-height: 1;
+    min-width: 2.2ch;
+  }
+  .guests .unit { color: var(--muted); }
+  input[type="range"] { width: 100%; accent-color: var(--steel); height: 32px; margin: 10px 0 0; }
+  .range-ends { display: flex; justify-content: space-between; color: var(--muted); font-size: 13px; }
+
+  .extra {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+  }
+  .extra:first-of-type { border-top: 1px solid var(--line); }
+  .extra input[type="checkbox"] { width: 22px; height: 22px; margin-top: 3px; accent-color: var(--steel); flex: none; }
+  .extra .name { font-weight: 600; display: block; }
+  .extra .desc { color: var(--muted); font-size: 14px; display: block; }
+  .extra .price { margin-left: auto; font-variant-numeric: tabular-nums; white-space: nowrap; padding-left: 12px; }
+  .extra select { width: auto; margin: 0; min-height: 40px; padding: 6px 10px; }
+
+  /* The estimate ticket */
+  .ticket-col { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); }
+  .ticket {
+    background: var(--ticket);
+    border: 1.5px solid var(--ink);
+    border-radius: 4px;
+    padding: 26px 24px 24px;
+    position: relative;
+  }
+  .ticket::before, .ticket::after {
+    content: "";
+    position: absolute;
+    top: 74px;
+    width: 18px; height: 18px;
+    background: var(--bg);
+    border: 1.5px solid var(--ink);
+    border-radius: 50%;
+  }
+  .ticket::before { left: -10px; clip-path: inset(0 0 0 50%); }
+  .ticket::after { right: -10px; clip-path: inset(0 50% 0 0); }
+  .ticket h2 { font-family: var(--display); font-weight: 800; font-size: 34px; margin: 0; line-height: 1; }
+  .ticket .when { color: var(--muted); font-size: 14px; margin: 6px 0 0; min-height: 21px; }
+  .perf { border: 0; border-top: 2px dashed var(--line); margin: 30px 0 18px; }
+  .lines { list-style: none; margin: 0; padding: 0; min-height: 60px; }
+  .lines li { display: flex; align-items: baseline; gap: 8px; padding: 7px 0; }
+  .lines .l { flex: 0 1 auto; }
+  .lines .l small { display: block; color: var(--muted); font-size: 13px; line-height: 1.35; }
+  .lines .dots { flex: 1 1 12px; border-bottom: 2px dotted var(--line); transform: translateY(-4px); min-width: 12px; }
+  .lines .a { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+  .empty { color: var(--muted); font-style: italic; }
+  .total {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-top: 2px solid var(--ink);
+    margin-top: 12px;
+    padding-top: 14px;
+  }
+  .total .t-label { font-weight: 600; }
+  .total .t-amt { font-family: var(--display); font-weight: 800; font-size: 58px; line-height: 1; color: var(--brass); font-variant-numeric: tabular-nums; }
+  .deposit { color: var(--muted); font-size: 14px; margin: 4px 0 0; text-align: right; }
+
+  .contact { margin-top: 22px; display: grid; gap: 12px; }
+  .btn {
+    font: inherit;
+    font-weight: 600;
+    background: var(--steel);
+    color: var(--on-steel);
+    border: 0;
+    border-radius: 4px;
+    min-height: 52px;
+    padding: 12px 18px;
+    cursor: pointer;
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .btn[disabled] { opacity: 0.6; cursor: default; }
+  .err { color: #B3261E; font-size: 14px; min-height: 20px; margin: 0; }
+  :root[data-theme="dark"] .err { color: #FF8A80; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .err { color: #FF8A80; } }
+  .fine { color: var(--muted); font-size: 13px; margin: 0; }
+
+  /* Venue-side preview */
+  .venue-view {
+    margin-top: 12px;
+    border: 1.5px solid var(--ink);
+    border-radius: 4px;
+    background: var(--surface);
+    padding: 22px;
+  }
+  .venue-view[hidden] { display: none; }
+  .venue-view h3 { font-family: var(--display); font-size: 30px; margin: 0 0 4px; line-height: 1; }
+  .venue-view p.sub { margin: 0 0 16px; color: var(--muted); }
+  .venue-view dl { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 6px 18px; }
+  .venue-view dt { color: var(--muted); }
+  .venue-view dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+  .venue-view .note { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
+
+  .mbar { display: none; }
+
+  @media (max-width: 860px) {
+    .grid { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+    .ticket-col { position: static; }
+    .row { grid-template-columns: 1fr; }
+    .mbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      padding: 10px 20px calc(10px + env(safe-area-inset-bottom, 0px));
+      background: var(--banner);
+      color: var(--on-banner);
+      z-index: 5;
+    }
+    .mbar .m-amt { font-family: var(--display); font-weight: 800; font-size: 34px; line-height: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="banner">Demo built for Warehouse 6 Events. All prices here are sample numbers, not your real rates.</div>
+
+<main class="wrap">
+  <h1>Know the price before you tour.</h1>
+  <p class="lede">Pick a date and a guest count and see an estimate right away. Planners get an answer in seconds, and you get their details.</p>
+
+  <div class="grid">
+    <div class="controls">
+      <fieldset>
+        <legend>Your event</legend>
+        <div class="row">
+          <label class="field">Type of event
+            <select id="type">
+              <option value="wedding">Wedding ceremony and reception</option>
+              <option value="rehearsal">Rehearsal dinner or shower</option>
+              <option value="corporate">Corporate event</option>
+              <option value="party">Birthday or private party</option>
+            </select>
+          </label>
+          <label class="field">Date
+            <input type="date" id="date" value="2027-06-12">
+            <span class="daybadge" id="daybadge"></span>
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Guests</legend>
+        <div class="guests">
+          <output id="guestOut" for="guests">120</output>
+          <span class="unit">guests</span>
+        </div>
+        <input type="range" id="guests" min="20" max="170" step="5" value="120" aria-label="Number of guests">
+        <div class="range-ends"><span>20</span><span>170</span></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Extras</legend>
+        <label class="extra">
+          <input type="checkbox" id="x-loft">
+          <span><span class="name">Loft getting-ready suite</span><span class="desc">A private space for the wedding party to get ready.</span></span>
+          <span class="price" id="p-loft"></span>
+        </label>
+        <label class="extra">
+          <input type="checkbox" id="x-coord">
+          <span><span class="name">Day-of coordinator</span><span class="desc">Someone on site to run setup and the schedule.</span></span>
+          <span class="price" id="p-coord"></span>
+        </label>
+        <label class="extra">
+          <input type="checkbox" id="x-setup">
+          <span><span class="name">Day-before setup access</span><span class="desc">Decorate the evening before, when the space is free.</span></span>
+          <span class="price" id="p-setup"></span>
+        </label>
+        <label class="extra">
+          <input type="checkbox" id="x-furn">
+          <span><span class="name">Tables and chairs setup</span><span class="desc">Priced per guest.</span></span>
+          <span class="price" id="p-furn"></span>
+        </label>
+        <div class="extra" style="cursor: default;">
+          <span><label class="name" for="x-hours" style="cursor:pointer;">Extra hours</label><span class="desc">Added to the standard rental time.</span></span>
+          <span class="price"><select id="x-hours" aria-label="Extra hours"><option value="0">None</option><option value="1">1 hour</option><option value="2">2 hours</option><option value="3">3 hours</option></select></span>
+        </div>
+      </fieldset>
+
+      <section class="venue-view" id="venueView" hidden aria-live="polite">
+        <h3>What the venue receives</h3>
+        <p class="sub">Demo only. Nothing was sent. This is the message that would land in your inbox.</p>
+        <dl>
+          <dt>From</dt><dd id="v-name"></dd>
+          <dt>Email</dt><dd id="v-email"></dd>
+          <dt>Event</dt><dd id="v-type"></dd>
+          <dt>Date</dt><dd id="v-date"></dd>
+          <dt>Guests</dt><dd id="v-guests"></dd>
+          <dt>Extras</dt><dd id="v-extras"></dd>
+          <dt>Estimate shown</dt><dd id="v-total"></dd>
+        </dl>
+        <p class="note">The guest would also get this estimate by email right away, so they hear from you first.</p>
+      </section>
+    </div>
+
+    <aside class="ticket-col">
+      <div class="ticket" aria-live="polite">
+        <h2>Your estimate</h2>
+        <p class="when" id="when"></p>
+        <hr class="perf">
+        <ul class="lines" id="lines"></ul>
+        <div class="total">
+          <span class="t-label">Estimated total</span>
+          <span class="t-amt" id="total">$0</span>
+        </div>
+        <p class="deposit" id="deposit"></p>
+
+        <div class="contact">
+          <label class="field">Your name
+            <input type="text" id="c-name" autocomplete="name">
+          </label>
+          <label class="field">Email
+            <input type="email" id="c-email" autocomplete="email">
+          </label>
+          <p class="err" id="err" role="alert"></p>
+          <button class="btn" id="send" type="button">Request this date</button>
+          <p class="fine">Estimates are not final. The venue confirms availability and the final price.</p>
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<div class="mbar" aria-hidden="true"><span>Estimated total</span><span class="m-amt" id="mTotal">$0</span></div>
+
+<script>
+  // Sample numbers only. Replace with the venue's real rates.
+  var PRICING = {
+    base: { sat: 4800, fri: 3600, sun: 3000, weekday: 1900 },
+    offSeasonFactor: 0.8,           // November through April
+    typeFactor: { wedding: 1, corporate: 0.9, party: 0.85, rehearsal: 0.6 },
+    loft: 450,
+    coordinator: 650,
+    setupDay: 500,
+    furniturePerGuest: 4,
+    extraHour: 300,
+    depositRate: 0.25
+  };
+  var TYPE_LABEL = {
+    wedding: 'Wedding ceremony and reception',
+    rehearsal: 'Rehearsal dinner or shower',
+    corporate: 'Corporate event',
+    party: 'Birthday or private party'
+  };
+
+  function $(id) { return document.getElementById(id); }
+  function money(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
+
+  function parseDate(v) {
+    if (!v) return null;
+    var p = v.split('-');
+    if (p.length !== 3) return null;
+    var d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  var current = null;
+
+  function compute() {
+    var type = $('type').value;
+    var guests = Number($('guests').value);
+    var d = parseDate($('date').value);
+    var out = { items: [], total: 0, deposit: 0, date: d, type: type, guests: guests, extras: [] };
+    if (!d) return out;
+
+    var dow = d.getDay();
+    var tier = dow === 6 ? 'sat' : dow === 5 ? 'fri' : dow === 0 ? 'sun' : 'weekday';
+    var tierName = { sat: 'Saturday', fri: 'Friday', sun: 'Sunday', weekday: 'Weekday' }[tier];
+    var m = d.getMonth() + 1;
+    var peak = m >= 5 && m <= 10;
+    var rental = PRICING.base[tier] * (peak ? 1 : PRICING.offSeasonFactor) * PRICING.typeFactor[type];
+
+    var detail = (peak ? 'Peak season' : 'Off-season') + ', exclusive use of the space';
+    if (type === 'rehearsal') detail += ', shorter booking';
+    if (type === 'corporate') detail += ', corporate rate';
+    if (type === 'party') detail += ', party rate';
+    out.items.push({ label: 'Venue rental, ' + tierName, detail: detail, amount: rental });
+
+    if ($('x-loft').checked) { out.items.push({ label: 'Loft getting-ready suite', amount: PRICING.loft }); out.extras.push('Loft suite'); }
+    if ($('x-coord').checked) { out.items.push({ label: 'Day-of coordinator', amount: PRICING.coordinator }); out.extras.push('Day-of coordinator'); }
+    if ($('x-setup').checked) { out.items.push({ label: 'Day-before setup access', amount: PRICING.setupDay }); out.extras.push('Day-before setup'); }
+    if ($('x-furn').checked) {
+      out.items.push({ label: 'Tables and chairs setup', detail: guests + ' guests at ' + money(PRICING.furniturePerGuest) + ' each', amount: guests * PRICING.furniturePerGuest });
+      out.extras.push('Tables and chairs');
+    }
+    var h = Number($('x-hours').value);
+    if (h > 0) {
+      out.items.push({ label: 'Extra hours', detail: h + (h === 1 ? ' hour' : ' hours') + ' at ' + money(PRICING.extraHour), amount: h * PRICING.extraHour });
+      out.extras.push(h + (h === 1 ? ' extra hour' : ' extra hours'));
+    }
+
+    var t = 0;
+    for (var i = 0; i < out.items.length; i++) t += out.items[i].amount;
+    out.total = t;
+    out.deposit = t * PRICING.depositRate;
+    out.tierName = tierName;
+    return out;
+  }
+
+  function dateLabel(d) {
+    return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  }
+
+  function render() {
+    current = compute();
+    var c = current;
+    $('guestOut').textContent = c.guests;
+
+    $('p-loft').textContent = money(PRICING.loft);
+    $('p-coord').textContent = money(PRICING.coordinator);
+    $('p-setup').textContent = money(PRICING.setupDay);
+    $('p-furn').textContent = money(PRICING.furniturePerGuest) + ' per guest';
+
+    var lines = $('lines');
+    lines.innerHTML = '';
+    if (!c.date) {
+      $('daybadge').textContent = '';
+      $('when').textContent = '';
+      var li = document.createElement('li');
+      li.className = 'empty';
+      li.textContent = 'Pick a date to see your estimate.';
+      lines.appendChild(li);
+      $('total').textContent = '$0';
+      $('mTotal').textContent = '$0';
+      $('deposit').textContent = '';
+      return;
+    }
+
+    $('daybadge').textContent = c.tierName + ' rate applies';
+    $('when').textContent = dateLabel(c.date) + ', ' + c.guests + ' guests';
+
+    c.items.forEach(function (it) {
+      var li = document.createElement('li');
+      var l = document.createElement('span');
+      l.className = 'l';
+      l.textContent = it.label;
+      if (it.detail) {
+        var s = document.createElement('small');
+        s.textContent = it.detail;
+        l.appendChild(s);
+      }
+      var dots = document.createElement('span');
+      dots.className = 'dots';
+      var a = document.createElement('span');
+      a.className = 'a';
+      a.textContent = money(it.amount);
+      li.appendChild(l); li.appendChild(dots); li.appendChild(a);
+      lines.appendChild(li);
+    });
+
+    $('total').textContent = money(c.total);
+    $('mTotal').textContent = money(c.total);
+    $('deposit').textContent = 'Deposit to hold the date (sample): ' + money(c.deposit);
+  }
+
+  ['type', 'date', 'guests', 'x-loft', 'x-coord', 'x-setup', 'x-furn', 'x-hours'].forEach(function (id) {
+    $(id).addEventListener('input', render);
+    $(id).addEventListener('change', render);
+  });
+
+  $('send').addEventListener('click', function () {
+    var name = $('c-name').value.trim();
+    var email = $('c-email').value.trim();
+    var err = $('err');
+    err.textContent = '';
+    if (!current || !current.date) { err.textContent = 'Pick a date first.'; return; }
+    if (!name) { err.textContent = 'Add your name so the venue knows who to reply to.'; return; }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { err.textContent = 'Enter an email address like name@example.com.'; return; }
+
+    $('v-name').textContent = name;
+    $('v-email').textContent = email;
+    $('v-type').textContent = TYPE_LABEL[current.type];
+    $('v-date').textContent = dateLabel(current.date);
+    $('v-guests').textContent = current.guests;
+    $('v-extras').textContent = current.extras.length ? current.extras.join(', ') : 'None selected';
+    $('v-total').textContent = money(current.total);
+    $('venueView').hidden = false;
+    $('send').textContent = 'Request sent (demo)';
+    $('send').disabled = true;
+    $('venueView').scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+  });
+
+  ['c-name', 'c-email'].forEach(function (id) {
+    $(id).addEventListener('input', function () {
+      $('send').disabled = false;
+      $('send').textContent = 'Request this date';
+    });
+  });
+
+  render();
+</script>
+</body>
+</html>
